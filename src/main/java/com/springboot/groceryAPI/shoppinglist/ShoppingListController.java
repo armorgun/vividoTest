@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.json.JsonParseException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,9 +18,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.groceryAPI.grocery.Groceries;
@@ -32,11 +39,15 @@ public class ShoppingListController {
 	private GroceryRepo groceryRepo;
 	
 	
+	
+	
 	@GetMapping(path="/showavailablelists")
 
 	  public @ResponseBody Iterable<ShoppingList> getAllLists() {
 	    return listRepo.findAll();
 	  }
+	
+	
 	
 	/*
 	@PostMapping(path="/addlist") 
@@ -59,21 +70,28 @@ public class ShoppingListController {
 	  }
 	*/
 	
+	
 	@PostMapping(path="/addlist") 
 	  public  ShoppingList addNewList (
 			  @RequestBody String jsonString		  
-			  ) 
+			  )
 	{
 		ShoppingList list = new ShoppingList();
 		
-		try {
-			list.mapJSONtoList(jsonString , groceryRepo);
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			try {
+				list.mapJSONtoList(jsonString , groceryRepo);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+				throw new ResponseStatusException(
+				           HttpStatus.BAD_REQUEST, "Invalid JSON format" , e);
+			} catch (NullPointerException e) {
+				e.printStackTrace();
+				throw new ResponseStatusException(
+				           HttpStatus.BAD_REQUEST, "Invalid JSON format" , e);
+			}
+
 		
-		return listRepo.save(list);
+		return list;
 
 //		List<Groceries> groceries = groceryRepo.findAll();
 //		//int[] groceryId = convertorToArrayOfInt(contained);

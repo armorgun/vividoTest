@@ -14,6 +14,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -82,6 +85,9 @@ public class ShoppingList {
 	}
 	
 	
+	
+	
+	
 	public void mapJSONtoList(String jsonString , GroceryRepo groceryRepo) throws JsonMappingException, JsonProcessingException {
 		JsonNode contained, name;
 		List<Groceries> groceries = groceryRepo.findAll();
@@ -90,10 +96,13 @@ public class ShoppingList {
 		name = new ObjectMapper().readTree(jsonString).get("name");
 		
 		
-		if(name.isTextual() && !name.isNull()) {
+		if(name.isTextual() && name.asText() != "") {
 			this.list_name = name.asText();
 		}
-
+		else {
+			throw new ResponseStatusException(
+			           HttpStatus.BAD_REQUEST, "Name not found");
+		}
 			
 		if (contained.isArray()) {
 			   for (final JsonNode objNode : contained) {
