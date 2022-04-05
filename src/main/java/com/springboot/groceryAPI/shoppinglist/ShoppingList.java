@@ -1,6 +1,7 @@
 package com.springboot.groceryAPI.shoppinglist;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Basic;
@@ -14,7 +15,12 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.groceryAPI.grocery.Groceries;
+import com.springboot.groceryAPI.grocery.GroceryRepo;
 
 
 
@@ -37,7 +43,15 @@ public class ShoppingList {
 			  )
 	private Set<Groceries> contained = new HashSet<>();
 	
+	public ShoppingList() {
+	}
 	
+	public ShoppingList(String list_name, Set<Groceries> contained) {
+		super();
+		this.list_name = list_name;
+		this.contained = contained;
+		
+	}
 
 	public Integer getId() {
 		return id;
@@ -65,6 +79,30 @@ public class ShoppingList {
 	
 	public void addMultiToList(Set<Groceries> groceries) {
 		contained.addAll(groceries);
+	}
+	
+	
+	public void mapJSONtoList(String jsonString , GroceryRepo groceryRepo) throws JsonMappingException, JsonProcessingException {
+		JsonNode contained, name;
+		List<Groceries> groceries = groceryRepo.findAll();
+		
+		contained = new ObjectMapper().readTree(jsonString).get("contained");
+		name = new ObjectMapper().readTree(jsonString).get("name");
+		
+		
+		if(name.isTextual() && !name.isNull()) {
+			this.list_name = name.asText();
+		}
+
+			
+		if (contained.isArray()) {
+			   for (final JsonNode objNode : contained) {
+				   this.contained.add(groceries.get(objNode.asInt()-1));
+			  }
+
+		}
+		
+		
 	}
 	
 	

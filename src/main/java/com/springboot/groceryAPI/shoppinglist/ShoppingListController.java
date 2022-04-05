@@ -11,10 +11,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.groceryAPI.grocery.Groceries;
 import com.springboot.groceryAPI.grocery.GroceryRepo;
 
@@ -34,24 +38,53 @@ public class ShoppingListController {
 	    return listRepo.findAll();
 	  }
 	
-	
+	/*
 	@PostMapping(path="/addlist") 
 	  public @ResponseBody ShoppingList addNewList (
 			  @RequestParam String name, 
-			  @RequestParam String groceryIn
+			  @RequestParam List<Groceries> contained
 			  ) 
 	{
 		ShoppingList list = new ShoppingList();
 		list.setName(name);
 		
-		List<Groceries> groceries = groceryRepo.findAll();
-		int[] groceryId = convertorToArrayOfInt(groceryIn);
+		//List<Groceries> groceries = groceryRepo.findAll();
+		//int[] groceryId = convertorToArrayOfInt(contained);
 		
-		for(int i=0;i<groceryId.length;i++) {
+		for(int i=0;i<contained.size();i++) {
 			//list.addToList(iterator.next());
-			list.addToList(groceries.get(groceryId[i]));
+			list.addToList(contained.get(i));
 		}
 	    return listRepo.save(list);
+	  }
+	*/
+	
+	@PostMapping(path="/addlist") 
+	  public  ShoppingList addNewList (
+			  @RequestBody String jsonString		  
+			  ) 
+	{
+		ShoppingList list = new ShoppingList();
+		
+		try {
+			list.mapJSONtoList(jsonString , groceryRepo);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return listRepo.save(list);
+
+//		List<Groceries> groceries = groceryRepo.findAll();
+//		//int[] groceryId = convertorToArrayOfInt(contained);
+//		
+//		for(int i=0;i<contained.size();i++) {
+//			//list.addToList(iterator.next());
+//			list.addToList(groceries.get(contained.get(i)));
+//		}
+	    //return listRepo.save(list);
+		 
+	    
 	  }
 	
 	@PutMapping(path="/addgrocerytolist")
